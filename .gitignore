@@ -1,0 +1,6 @@
+
+*.metadata
+*.NES/.settings
+*.NES/.classpath
+*.NES/.project
+
