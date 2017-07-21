@@ -101,8 +101,5 @@ public class NESFileReader {
 		System.out.println("PRGROM Memory  : " + DatatypeConverter.printHexBinary(PRGROM));
 		System.out.println("PRGROM Memory  : " + DatatypeConverter.printHexBinary(CHRROM));
 		System.out.println("PRGROM Memory  : " + DatatypeConverter.printHexBinary(PRGRAM));
-		
-		
-		
 	}
 }
