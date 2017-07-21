@@ -3,6 +3,11 @@ public class iNESHeader {
 	
 	//iNES header uses 16 bytes
 	
+	/* potential use byte 7 and $0C = $08 to determine 2.0 NES format
+	 byte 7 and $0C = $00 to determine iNES
+	 Otherwise archaic iNES
+	 */
+	
 	int identifier; // first 4 bytes of the header display : NES.
 	byte PRG_ROM_UNITS; // byte 4
 	byte CHR_ROM_UNITS; // byte 5
@@ -48,11 +53,11 @@ public class iNESHeader {
 		int ignoreMirror = (this.flag6 >> 3) & 1;
 		System.out.println("mirror (h : 0 / v : 1) : " + mirror);
 		System.out.println("Ignore mirror : " + ignoreMirror);
-		return mirror | (ignoreMirror << 1);
+		return (byte) (mirror | (ignoreMirror << 1));
 	}
 	
-	public boolean hasBatteryPack(){
-		return (((this.flag6 >> 2) & 1) == 1 ? true : false);
+	public byte hasBatteryPack(){
+		return (byte) ((this.flag6 >> 2) & 1);
 	}
 	
 	public boolean hasTrainer(){
@@ -76,11 +81,6 @@ public class iNESHeader {
 		byte upperMapperBits = (byte) (this.flag7 >> 4);
 		return (byte) (upperMapperBits << 4 | lowerMapperBits);
 	}
-
-	/* potential use byte 7 and $0C = $08 to determine 2.0 NES format
-	 				 byte 7 and $0C = $00 to determine iNES
-	 				 Otherwise archaic iNES
-	*/
 	
 	public iNESHeader(byte[] bytes){
 		this.identifier = (bytes[0] << 8 * 3) | (bytes[1] << 8 * 2) | + (bytes[2] << 8) | + (bytes[3]);

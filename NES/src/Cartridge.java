@@ -19,6 +19,7 @@ public class Cartridge {
 		this.mapperType = mapper;
 		this.batteryValue = battery;
 		SRAM = new byte[2000];
+		
 	}
 	
 	// to do  SAVE/LOAD State;
