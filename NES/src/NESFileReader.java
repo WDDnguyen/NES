@@ -46,13 +46,10 @@ public class NESFileReader {
 			int byteRead = fc.read(byteBuffer);
 		
 			System.out.println("Number of bytes read : " + byteRead);
-			System.out.println("------------------------------------------");
-			
 			byteBuffer.flip();
 				
 			byteBuffer.get(headerByte,0, 16);
 			
-			System.out.println(Arrays.toString(headerByte));
 			iNESHeader header = new iNESHeader(headerByte);
 			
 			if(headerByte.length != 16){
@@ -63,13 +60,23 @@ public class NESFileReader {
 				System.out.println("This is not a iNES file (.nes)");
 			}
 			
-			System.out.println("Mirror Type : " + header.getMirrorType());
-			
-			
 			byteBuffer.clear();
 			byteRead = fc.read(byteBuffer);
 			fc.close();
+	
+			printLog(header);
 		}
+	}
+	
+	public static void printLog(iNESHeader header){
+		System.out.println(Arrays.toString(headerByte));
+		System.out.println("Mirror Type : " + header.getMirrorType());
+		System.out.println("Battery Pack present : " + header.hasBatteryPack());
+		System.out.println("Trainer present : " + header.hasTrainer());
+		System.out.println("Mapper Type : " + header.getMapperType());
+		System.out.println("PRG ROM SIZE in bytes : " + header.getPRGROMSize());
+		System.out.println("CHR ROM SIZE in bytes : " + header.getCHRROMSize());
+		System.out.println("PRG RAM SIZE in bytes : " + header.getPRGRAMSize());
 		
 	}
 	

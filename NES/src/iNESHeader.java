@@ -21,7 +21,7 @@ public class iNESHeader {
 		 bit 0 : VS Unisystem
 		 bit 1 : PlayChoice-10 (8KB of Hint Screen Data stored after CHR data)
 		 bit 2-3 : If  bit 3 == bit 2 , flags 8-15 are in NES 2.0 format.
-		 bit 4-7 : lower hex of mapper number
+		 bit 4-7 : upper hex of mapper number
 		 */
 	byte PRG_RAM_UNITS; // in 8KB units  byte 8
 	byte flag9; // byte 9 
@@ -51,6 +51,32 @@ public class iNESHeader {
 		return mirror | (ignoreMirror << 1);
 	}
 	
+	public boolean hasBatteryPack(){
+		return (((this.flag6 >> 2) & 1) == 1 ? true : false);
+	}
+	
+	public boolean hasTrainer(){
+		return (((this.flag6 >> 1) & 1) == 1 ? true : false);
+	}
+	
+	public int getPRGROMSize(){
+		return this.PRG_ROM_UNITS * 16384;
+	}
+	
+	public int getCHRROMSize(){
+		return this.CHR_ROM_UNITS * 8192;
+	}
+	
+	public int getPRGRAMSize(){
+		return this.PRG_RAM_UNITS * 8192;
+	}
+	
+	public byte getMapperType(){
+		byte lowerMapperBits = (byte) (this.flag6 >> 4);
+		byte upperMapperBits = (byte) (this.flag7 >> 4);
+		return (byte) (upperMapperBits << 4 | lowerMapperBits);
+	}
+
 	/* potential use byte 7 and $0C = $08 to determine 2.0 NES format
 	 				 byte 7 and $0C = $00 to determine iNES
 	 				 Otherwise archaic iNES
