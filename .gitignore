@@ -1,6 +1,13 @@
+.metadata
+.recommenders/
 
-*.metadata
-*.NES/.settings
-*.NES/.classpath
-*.NES/.project
+NES/.settings
+NES/.classpath
+NES/.project
+NES/Tetris (USA).nes
+NES/bin/cpu$Interrupts.class
+NES/bin/cpu$addressModes.class
+
+
+
 
