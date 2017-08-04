@@ -1,5 +1,5 @@
 
-public class Mapper {
+public class Mapper{
 	
 	public enum MirrorType{
 		Horizontal,
@@ -10,7 +10,6 @@ public class Mapper {
 	}
 	
 	//CPU Memory Map
-	Cartridge cartridge;						  //Cartridge with content loaded from ines file
 	byte[] cpuRAM = new byte[0x800]; 		 	  // $0000-$07FF
 	byte[][] RAMMirrors = new byte [3][0x800];    // $0800-$0FFF 3x(0x800) mirrors of internal cpu RAM  
 	byte[] PPURegisters = new byte [0x0008];      // $2000-$2007 PPU registers
@@ -28,4 +27,16 @@ public class Mapper {
 	byte[] OAM = new byte [256];				  // determine how sprites are rendered  from CPU $2003 (OAMADDR), $2004(OAMDATA), $4014 (OAMDMA)
 	
 	
+	public static Mapper NewMapper(Cartridge cartridge){
+		System.out.println("Creating new Mapper Type : " + cartridge.mapperType);
+		switch (cartridge.mapperType){
+		case 1: 
+			return (new MMC1(cartridge));
+		default : 
+			System.out.println("Invalid Mapper");
+			return null;
+		}
+			
+	}
+
 }
