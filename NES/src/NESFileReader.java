@@ -83,7 +83,7 @@ public class NESFileReader {
 		printLog(header);
 		System.out.println("Successfully loaded file to Cartridge !");
 		
-		return new Cartridge(trainer,PRGROM,CHRROM,PRGRAM,mirrorType,mapperType,hasBattery);
+		return new Cartridge(trainer,PRGROM,CHRROM,PRGRAM, header.getMirrorType(), header.getMapperType(),hasBattery);
 	}
 	public void printLog(iNESHeader header){
 		System.out.println("Number of bytes read : " + byteRead);

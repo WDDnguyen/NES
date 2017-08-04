@@ -48,7 +48,7 @@ public class iNESHeader {
 		 	byte 13 : Vs. PPU variant
 		*/
 	
-	public int getMirrorType(){
+	public byte getMirrorType(){
 		int mirror = this.flag6 & 1;
 		int ignoreMirror = (this.flag6 >> 3) & 1;
 		System.out.println("mirror (h : 0 / v : 1) : " + mirror);
