@@ -12,7 +12,6 @@ public class emulator {
 		NESFileReader fr = new NESFileReader();
 		Cartridge cartridge = fr.loadFileDataToCartridge(FILE_NAME);
 		mapper = Mapper.NewMapper(cartridge);
-		
 	}
 	
 }

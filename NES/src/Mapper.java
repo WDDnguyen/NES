@@ -1,14 +1,12 @@
 
 public class Mapper{
 	
-	public enum MirrorType{
-		Horizontal,
-		Vertical,
-		SingleScreen0,
-		SingleScreen1,
-		FourScreen
-	}
-	
+	public static final int MIRROR_HORIZONTAL = 0;
+	public static final int MIRROR_VERTICAL = 1;
+	public static final int MIRROR_SINGLE0 = 2;
+	public static final int MIRROR_SINGLE1 = 3;
+	public static final int MIRROR_FOUR = 4;
+
 	//CPU Memory Map
 	byte[] cpuRAM = new byte[0x800]; 		 	  // $0000-$07FF
 	byte[][] RAMMirrors = new byte [3][0x800];    // $0800-$0FFF 3x(0x800) mirrors of internal cpu RAM  

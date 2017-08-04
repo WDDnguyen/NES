@@ -23,6 +23,67 @@ public class MMC1 extends Mapper {
 	
 	//control register in MMC1, possible for he program to swap the fixed and switchable PRG ROM or set up a 32 KB PRG bankswitching, but most game use the default setup
 	
+	/* TO DO 
+	1-Determine whether PRG ROM is "large" (512 KiB) or "small" ( 256 KiB or less) and 
+	whether CHR is "large" ( 16-128 KiB CHR ROM) or "small" (8 KiB CHR ROM or CHR RAM)
+	2- When PRG ROM is large, the highest CHR line (CHR A16) swtiches 256 KiB PRG ROM banks as in SUROM
+	3- When CHR is large, MMC1 registers act "normal"
+	4- When CHR is small, the MMC1's CHR bank registers switch PRG RAM banks, if battery bit is present, only banks which are written to are save to the disk when the game is quit. WHen loading a game with the battery bit set, if a 8KB .sav file is present, it is repeated equally across all banks.
+	This will lead to data being saved when it wasn't supposed to for SOROM games, but 9KB of hard disk space isn't a problem, and no known NES game had the copy protection based on PRG RAM size that was common in the Super NES era.
+	5- When both PRG ROM and CHR are small, CHR A16 disables PRG RAM when turned on
+	*/
+	
+	
+	byte shiftRegister;
+	Cartridge cart;
+	byte PRGMode;
+	byte control;
+	byte CHRMode;
+	byte prgBank;
+	byte CHRBank0;
+	byte CHRBank1;
+	int[] PRGBanks;
+	int[] CHRBanks;
+	
+	public MMC1(Cartridge cartridge){
+		cart = cartridge;
+		PRGBanks = new int[2];
+		CHRBanks = new int[2];
+		shiftRegister = 0x10;
+	}
+	
+	
+	/* Control (Internal, $8000-$9FFF) (8192 bits)
+ 	CPPMM
+ 	C : CHR ROM bank mode (0: switch 8KB at a time; 1 : switch two seperate 4KB banks
+ 	PP : PRG ROM bank mode : (0,1 : switch 32 KB at $8000, ignoring low bit of bank number
+ 							  2 : fix first bank at $8000 and switch 16 KB at $C000)
+ 							  3: fix last bank at $C000 and switch 16 KB bank at $8000)
+    MM : Mirroring (0 : one-screen, lower bank,
+    				1 : one-screen , upper bank
+    				2 : Vertical 
+    				3 : Horizontal
+  */
+	
+	public void writeControl(byte value){
+		control = value;
+	    CHRMode = (byte) ((value >> 4) & 1);
+	    PRGMode = (byte) ((value >> 4) & 3);
+	    byte mirror = (byte) (value & 3);
+	    switch (mirror){
+	    case 0 :
+	    	cart.mirrorType = MIRROR_SINGLE0;
+	    case 1 : 
+	    	cart.mirrorType = MIRROR_SINGLE1;
+	    case 2 : 
+	    	cart.mirrorType = MIRROR_VERTICAL;
+	    case 3 : 
+	    	cart.mirrorType = MIRROR_HORIZONTAL;
+	    }
+	    updateBanks();
+	}
+	
+
 	//REGISTERS
 	// MMC1 is configured through a serial port in order to reduce pin count
 	
@@ -34,8 +95,7 @@ public class MMC1 extends Mapper {
 	//After 5th write, the shift register is cleared automatically, so a write to the shift register with bit 7 on to reset it is not needed.
 	
 	//When the CPU writes to the serial port on consecutive cycles, the MMC1 ignores all writes but the first. THis happens when the 6502 executes read-modify-write (RMW) instructions, such as DEC and ROR, by writing back the old value and then writing the new values on the next cycle.
-	
-	
+
 	
 	/*LOAD register ($8000-$FFFF)
 	  Rxxx xxxD 
@@ -43,56 +103,78 @@ public class MMC1 extends Mapper {
 	  D : Data bit to be shifted into shift register ,LSB First
 	*/
 	
-	/* Control (Internal, $8000-$9FFF)
-	 	5 bit
-	 	CPPMM
-	 	C : CHR ROM bank mode (0: switch 8KB at a time; 1 : switch two seperate 4KB banks
-	 	PP : PRG ROM bank mode : (0,1 : switch 32 KB at $8000, ignoring low bit of bank number
-	 							  2 : fix first bank at $8000 and switch 16 KB at $C000)
-	 							  3: fix last bank at $C000 and switch 16 KB bank at $8000)
-	    MM : Mirroring (0 : one-screen, lower bank,
-	    				1 : one-screen , upper bank
-	    				2 : Vertical 
-	    				3 : Horizontal
-	  */
-	
-	/*
-	 CHR bank 0 (internal, $A000-$BFFF)
-	 5 bit 
-	 Select 4 KB or 8 KB CHR bank at PPU $0000 (low bit ignored in 9KB mode)
-	 
-	 MMC1 can do CHR banking in 4KB chunks. Known carts with CHR RAM have 9 KiB, so that makes 2 banks. RAM vs ROM doesn't make any difference for addres lines. For carts with 8Kib of CHR (be it ROM or RAM), MMC1 follows the common behaviour
-	 of using only the low-order bits : the bank number is in effect ANDed with 1.
-	*/
-	
-	/*	CHR bank 1 (internal, $C000-$DFFF)
-	 	5 bit
-	 	Select 4KB CHR bank at PPU $1000 (ignored in 8 KB mode)
-	*/
-	
-	/*
-	 PRG bank (internal, $E000-$FFFF)
-	 RPPPP
-	 R : PRG RAM chip enable (0 : enabled;
-	 						  1 : disabled, ignored on MMC1A)
-	 PPPP: Select 16 KB PRG ROM bank ( low bit ignored 32 KB mode)					  
-	*/
-	
-	/* TO DO 
-	1-Determine whether PRG ROM is "large" (512 KiB) or "small" ( 256 KiB or less) and 
-	whether CHR is "large" ( 16-128 KiB CHR ROM) or "small" (8 KiB CHR ROM or CHR RAM)
-	2- When PRG ROM is large, the highest CHR line (CHR A16) swtiches 256 KiB PRG ROM banks as in SUROM
-	3- When CHR is large, MMC1 registers act "normal"
-	4- When CHR is small, the MMC1's CHR bank registers switch PRG RAM banks, if battery bit is present, only banks which are written to are save to the disk when the game is quit. WHen loading a game with the battery bit set, if a 8KB .sav file is present, it is repeated equally across all banks.
-	This will lead to data being saved when it wasn't supposed to for SOROM games, but 9KB of hard disk space isn't a problem, and no known NES game had the copy protection based on PRG RAM size that was common in the Super NES era.
-	5- When both PRG ROM and CHR are small, CHR A16 disables PRG RAM when turned on
-	*/
-	byte shiftRegister = 0x10;
-	Cartridge cart;
-	
-	public MMC1(Cartridge cartridge){
-		this.cart = cartridge;
+	public void loadRegister(short address, byte value){
+		if((value & 0x80) == 0x80){
+			shiftRegister = 0x10;
+			writeControl((byte) (control | 0x0C));
+		} else {
+			boolean complete = ((shiftRegister & 1) == 1);
+			shiftRegister >>= 1;
+			shiftRegister |= (value & 1) << 4;
+			if(complete){
+				writeRegister(address, shiftRegister);
+				shiftRegister = 0x10;
+			}
+		}
 	}
+	
+	public void writeRegister(short address, byte value){
+		if(address <= 0x9FFF){
+			writeControl(value);
+		}else if (address <= 0xBFFF){
+			writeCHRBank0(value);
+		}else if (address <= 0xDFFF){
+			writeCHRBank1(value);
+		}
+		else if (address <= 0xFFFF){
+			writePRGBank(value);
+		}
+	}
+	
+	//CHR bank 0 (internal, $A000-$BFFF)
+	public void writeCHRBank0(byte value){
+		CHRBank0 = value;
+		updateBanks();
+	}
+	
+    //CHR bank 1 (internal, $C000-$DFFF)
+	public void writeCHRBank1 (byte value){
+		CHRBank1 = value;
+		updateBanks();
+	}
+	
+	
+    //PRG bank (internal, $E000-$FFFF)
+	public void writePRGBank(byte value){
+		prgBank = (byte)(value & 0x0F);
+		updateBanks();
+	}
+	
+	
+	
+	
+	public int prgBankOffset(int index){
+		return 0;
+	}
+	
+	public int chrBankOffset(int Index){
+		return 0;
+	}
+	public void updateBanks(){
+		switch(PRGMode){
+		case 0 :
+		case 1 :
+		case 2 :
+		case 3 :
+			
+		}
+		
+		switch(CHRMode){
+		case 0:
+		case 1:
+		}
+	}
+	
 	
 	
 	
