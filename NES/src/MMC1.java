@@ -1,6 +1,8 @@
 
 public class MMC1 extends Mapper {
 	
+	//NEED TO TEST 
+	
 	/*MMC1 SPECIFICATION
 		PRG ROM capacity 512K
 		PRG ROM window 16K + 16K fixed or 32K
@@ -42,7 +44,6 @@ public class MMC1 extends Mapper {
 		PPU $0000-$0FFF : 4 KB switchable CHR bank
 		PPU $1000-$1FFF: 4 KB switchable CHR bank
 	*/
-	
 	
 	/* Control (Internal, $8000-$9FFF) (8192 bits)
  	CPPMM
@@ -192,5 +193,44 @@ public class MMC1 extends Mapper {
 			offset += cart.CHRROM.length;
 		}
 		return offset;
+	}
+	
+	public byte read(short address){
+		// Writing to PPU CHR ROM
+		if(address < 0x2000){
+			int bank = address / 0x1000;
+			int offset = address % 0x1000;
+			return cart.CHRROM[CHROffsets[bank] + offset];
+			// Writing to CPU PRG ROM
+		} else if (address >= 0x8000){
+			address -= 0x8000;
+			int bank = address / 0x4000;
+			int offset = address % 0x4000;
+			return cart.PRGROM[PRGOffsets[bank] + offset];
+			// Writing into Cartridge SRAM
+		} else if (address >= 0x6000){
+			return cart.SRAM[address - 0x6000];
+		} else {
+			System.out.println("READ ERROR FOR MMC1 AT ADDRESS : " + address);
+			return 0;
+			
+		}
+	}
+	
+	public void write(short address, byte value){
+		// Writing to PPU CHR ROM
+		if (address < 0x2000){
+			int bank = address / 0x1000;
+			int offset = address % 0x1000;
+			cart.CHRROM[CHROffsets[bank] + offset] = value;
+		// Writing to CPU PRG ROM
+		} else if (address >= 0x8000){
+			loadRegister(address, value);
+		} else if (address >= 0x6000){
+		// Writing into Cartridge SRAM
+			cart.SRAM[address - 0x6000] = value;
+		} else {
+			System.out.println("Write ERROR FOR MMC1 AT ADDRESS : " + address);
+		}
 	}
 }
