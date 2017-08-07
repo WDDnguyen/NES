@@ -7,11 +7,16 @@ public class emulator {
 	final static String FILE_NAME = "D:/NESTEST/Tetris.nes";
 	
 	public static void main(String[] Args) throws IOException, InvalidFileException{
-		
-		Mapper mapper;
+	
 		NESFileReader fr = new NESFileReader();
 		Cartridge cartridge = fr.loadFileDataToCartridge(FILE_NAME);
-		mapper = Mapper.NewMapper(cartridge);
+		MMC1 mapper = new MMC1(cartridge);
+		
+		cpu CPU = new cpu(mapper);
+		byte flags = (byte) 0x01;
+		CPU.setFlags(flags);
+		CPU.printFlagsStatus();
+		
 	}
 	
 }

@@ -2,6 +2,7 @@
 public class cpu {
 	
 	final int cpuFrequency = 1789773; // 1.79MHz 
+	MMC1 mapper;
 	
 	//Constant Address Modes
 	private static int mABSOLUTE = 1;
@@ -30,14 +31,15 @@ public class cpu {
 	byte X; // X Register
 	byte Y; // Y Register
 	
-	//Status Register Flag
-	byte C; // Carry flag
-	byte Z; // Zero Flag
-	byte I; // Interrupt Disable Flag
-	byte D; // BCD flag  currently not using
-	byte B; // Break flag
-	byte V; // Overflow Flag
-	byte N; // negative Flag
+	//Status Register Flag  (8 bits)
+	byte C; // Carry flag						bit 0
+	byte Z; // Zero Flag						bit 1
+	byte I; // Interrupt Disable Flag			bit 2
+	byte D; // BCD flag  currently not using	bit 3
+	byte B; // Break flag						bit 4
+									  // ignore bit 5 
+	byte V; // Overflow Flag					bit 6	
+	byte N; // negative Flag					bit 7
 	
 	// Memory Interface to add later 
 	// CPU execution variables
@@ -47,7 +49,7 @@ public class cpu {
 	byte instruction = 0; //current instruction
 
 	/*
-		256 total opcodes in a 16 x 32 instruction matrix using http://nesdev.com/6502.txt 
+		256 total opcodes in a 16 x 32 instruction matrix using http://nesdev.com/6502.txt and http://www.thealmightyguru.com/Games/Hacking/Wiki/index.php/6502_Opcodes 
 	*/
 	
 	String[] instructionNames = {
@@ -102,5 +104,64 @@ public class cpu {
 			2, 6, 2, 8, 3, 3, 5, 5, 2, 2, 2, 2, 4, 4, 6, 6, 2, 5, 2, 8, 4, 4, 6, 6, 2, 4, 2, 7, 4, 4, 7, 7
 	};
 	
+	public cpu(MMC1 map){
+		mapper = map;
+	}
+	
+	public void setFlags(byte flags){
+		C = (byte) (flags >> 0 & 1);
+		Z = (byte) (flags >> 1 & 1);
+		I = (byte) (flags >> 2 & 1);
+		D = (byte) (flags >> 3 & 1);
+		B = (byte) (flags >> 4 & 1);
+		V = (byte) (flags >> 6 & 1);
+		N = (byte) (flags >> 7 & 1);
+	}
+	
+	public void printFlagsStatus(){
+		System.out.println("Status Register : CZIDB-VN : " + C + "" + Z + "" + I + "" + D + "" + B + "-" + V + "" + N + "" );
+	}
+	
+	// reset to power-up
+	public void reset(){
+		SP = (byte) 0xFD;
+		setFlags((byte)0x34);
+		A = 0;
+		X = 0;
+		Y = 0;
+	}
+	
+	public void run(){
+		// need to determine when it's interrupting or stalling
+	}
+	
+	public byte read(short address){
+		
+		if (address < 0x2000){
+			//return address in RAM
+		}else if (address < 0x4000){
+			// need to do PPU with 4014,4015,4016,4017
+		} else if (address < 0x6000){
+			//need to do I/O registers
+		}
+		else if (address >= 0x6000){
+			return mapper.read(address);
+		}else {
+			System.out.println("Unable to read address in CPU : " + address);
+		}
+		return 0;
+	}
+	
+	public void write(short address, byte value){
+		if(address < 0x2000){
+			//return address in RAM
+		} else if (address < 0x4000){
+			//need to write in PPU with 4014,4015,4016,4017
+		} else if (address >= 0x6000){
+			mapper.write(address, value);
+		}else {
+			System.out.println("Unable to write address in CPU : " + address);
+		}
+	}
 	
 }
